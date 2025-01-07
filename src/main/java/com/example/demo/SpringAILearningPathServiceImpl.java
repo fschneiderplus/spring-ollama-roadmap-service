@@ -4,7 +4,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.stereotype.Service;
+
 @Service
 public class SpringAILearningPathServiceImpl implements LearningPathService {
 
@@ -12,12 +12,21 @@ public class SpringAILearningPathServiceImpl implements LearningPathService {
     private final ObjectMapper objectMapper; // For parsing JSON
 
     private final ChatClient chatClient;
+    private final OllamaService ollamaService;
+
     // Could be an LLM integration or a mock
     public SpringAiLearningPathServiceImpl(RoadmapNodeRepository roadmapNodeRepository,
-                                           ObjectMapper objectMapper) {
+                                           ObjectMapper objectMapper, OllamaService ollamaService) {
         this.chatClient = chatClientBuilder.build();
         this.roadmapNodeRepository = roadmapNodeRepository;
         this.objectMapper = objectMapper;
+        this.ollamaService = ollamaService;
+    }
+
+    public SpringAILearningPathServiceImpl(RoadmapNodeRepository roadmapNodeRepository, ObjectMapper objectMapper, ChatClient chatClient) {
+        this.roadmapNodeRepository = roadmapNodeRepository;
+        this.objectMapper = objectMapper;
+        this.chatClient = chatClient;
     }
 
 
@@ -33,7 +42,7 @@ public class SpringAILearningPathServiceImpl implements LearningPathService {
     public RoadmapNode generateNodeFromLLM(String prompt) {
         try {
             // 1. Call LLM service to get JSON describing the node
-            String nodeJson = llmService.generateNewNodeJSON(prompt);
+            String nodeJson = ollamaService.callOllamaForJSON(prompt);
 
             // 2. Parse JSON
             JsonNode jsonNode = objectMapper.readTree(nodeJson);
