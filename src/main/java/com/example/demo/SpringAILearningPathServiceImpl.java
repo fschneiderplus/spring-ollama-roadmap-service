@@ -7,28 +7,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class SpringAILearningPathServiceImpl implements LearningPathService {
-
     private final RoadmapNodeRepository roadmapNodeRepository;
-    private final ObjectMapper objectMapper; // For parsing JSON
-
+    private final ObjectMapper objectMapper;
     private final ChatClient chatClient;
     private final OllamaService ollamaService;
 
-    // Could be an LLM integration or a mock
-    public SpringAiLearningPathServiceImpl(RoadmapNodeRepository roadmapNodeRepository,
-                                           ObjectMapper objectMapper, OllamaService ollamaService) {
-        this.chatClient = chatClientBuilder.build();
-        this.roadmapNodeRepository = roadmapNodeRepository;
-        this.objectMapper = objectMapper;
-        this.ollamaService = ollamaService;
-    }
-
-    public SpringAILearningPathServiceImpl(RoadmapNodeRepository roadmapNodeRepository, ObjectMapper objectMapper, ChatClient chatClient) {
+    public SpringAILearningPathServiceImpl(
+            RoadmapNodeRepository roadmapNodeRepository,
+            ObjectMapper objectMapper, 
+            ChatClient chatClient,
+            OllamaService ollamaService) {
         this.roadmapNodeRepository = roadmapNodeRepository;
         this.objectMapper = objectMapper;
         this.chatClient = chatClient;
+        this.ollamaService = ollamaService;
     }
-
 
     @Override
     public Answer askQuestion(Question question) {

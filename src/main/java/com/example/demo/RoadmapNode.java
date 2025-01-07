@@ -17,7 +17,6 @@ public class RoadmapNode {
     private String link;
 
     @ManyToOne
-    @JoinColumn(name = "parent_id")
     private RoadmapNode parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -50,5 +49,4 @@ public class RoadmapNode {
 
     public List<RoadmapNode> getChildren() { return children; }
     public void setChildren(List<RoadmapNode> children) { this.children = children; }
-
 }
