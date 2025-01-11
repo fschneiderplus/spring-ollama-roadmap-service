@@ -30,31 +30,51 @@ public class OllamaService {
                 .put("stream", false);
 
         String requestBody = objectMapper.writeValueAsString(requestNode);
+        System.out.println("Sending request to Ollama: " + requestBody);
 
         try {
             // 2. Make the POST request to Ollama
+            System.out.println("Making request to Ollama...");
             String response = webClient.post()
                     .uri("/api/generate")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(requestBody)
                     .retrieve()
                     .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
-                            clientResponse -> clientResponse.bodyToMono(String.class)
-                                    .flatMap(errorBody -> Mono.error(new RuntimeException(
-                                            "Error response: " + errorBody))))
+                            clientResponse -> {
+                                System.out.println("Received error status: " + clientResponse.statusCode());
+                                return clientResponse.bodyToMono(String.class)
+                                        .flatMap(errorBody -> {
+                                            System.out.println("Error body: " + errorBody);
+                                            return Mono.error(new RuntimeException("Error response: " + errorBody));
+                                        });
+                            })
                     .bodyToMono(String.class)
+                    .doOnNext(r -> System.out.println("Received response: " + r))
                     .block();
+
+            System.out.println("Raw response from Ollama: " + response);
 
             if (response != null) {
                 // 3. The response is a JSON object with a "response" field that holds the entire generation
                 JsonNode root = objectMapper.readTree(response);
-                System.out.println("Response: " + root.get("response").asText());
-                return root.get("response").asText();
+                System.out.println("Parsed JSON response: " + root.toString());
+                String result = root.get("response").asText();
+                System.out.println("Final response: " + result);
+                return result;
             } else {
+                System.out.println("Received null response from Ollama");
                 throw new RuntimeException("Failed to get a valid response from Ollama");
             }
         } catch (WebClientResponseException e) {
-            System.err.println("Error response body: " + e.getResponseBodyAsString());
+            System.err.println("WebClientResponseException occurred:");
+            System.err.println("Status code: " + e.getStatusCode());
+            System.err.println("Response body: " + e.getResponseBodyAsString());
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Unexpected exception: " + e.getClass().getName());
+            System.err.println("Message: " + e.getMessage());
+            e.printStackTrace();
             throw e;
         }
     }
