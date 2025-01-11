@@ -30,42 +30,55 @@ public class OllamaService {
                 .put("stream", false);
 
         String requestBody = objectMapper.writeValueAsString(requestNode);
-        System.out.println("Sending request to Ollama: " + requestBody);
+        System.out.println("Sending request to Ollama with body: " + requestBody);
 
         try {
             // 2. Make the POST request to Ollama
-            System.out.println("Making request to Ollama...");
-            String response = webClient.post()
+            System.out.println("Starting Ollama request...");
+            
+            return webClient.post()
                     .uri("/api/generate")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(requestBody)
                     .retrieve()
-                    .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
-                            clientResponse -> {
-                                System.out.println("Received error status: " + clientResponse.statusCode());
-                                return clientResponse.bodyToMono(String.class)
-                                        .flatMap(errorBody -> {
-                                            System.out.println("Error body: " + errorBody);
-                                            return Mono.error(new RuntimeException("Error response: " + errorBody));
-                                        });
-                            })
                     .bodyToMono(String.class)
-                    .doOnNext(r -> System.out.println("Received response: " + r))
+                    .doOnSubscribe(s -> System.out.println("Subscribed to request"))
+                    .doOnNext(response -> {
+                        System.out.println("Received response from Ollama");
+                        System.out.println("Raw response: " + response);
+                        try {
+                            JsonNode root = objectMapper.readTree(response);
+                            System.out.println("Parsed response: " + root.toString());
+                            if (root.has("response")) {
+                                System.out.println("Found response field: " + root.get("response").asText());
+                            } else {
+                                System.out.println("No response field found in: " + root.toString());
+                            }
+                        } catch (Exception e) {
+                            System.err.println("Error parsing response: " + e.getMessage());
+                        }
+                    })
+                    .doOnError(error -> {
+                        System.err.println("Error occurred during request:");
+                        System.err.println("Error type: " + error.getClass().getName());
+                        System.err.println("Error message: " + error.getMessage());
+                        if (error instanceof WebClientResponseException) {
+                            WebClientResponseException wcError = (WebClientResponseException) error;
+                            System.err.println("Response status: " + wcError.getStatusCode());
+                            System.err.println("Response body: " + wcError.getResponseBodyAsString());
+                        }
+                    })
+                    .map(response -> {
+                        try {
+                            JsonNode root = objectMapper.readTree(response);
+                            return root.get("response").asText();
+                        } catch (Exception e) {
+                            System.err.println("Error parsing response in map: " + e.getMessage());
+                            throw new RuntimeException("Failed to parse Ollama response", e);
+                        }
+                    })
                     .block();
 
-            System.out.println("Raw response from Ollama: " + response);
-
-            if (response != null) {
-                // 3. The response is a JSON object with a "response" field that holds the entire generation
-                JsonNode root = objectMapper.readTree(response);
-                System.out.println("Parsed JSON response: " + root.toString());
-                String result = root.get("response").asText();
-                System.out.println("Final response: " + result);
-                return result;
-            } else {
-                System.out.println("Received null response from Ollama");
-                throw new RuntimeException("Failed to get a valid response from Ollama");
-            }
         } catch (WebClientResponseException e) {
             System.err.println("WebClientResponseException occurred:");
             System.err.println("Status code: " + e.getStatusCode());
@@ -120,6 +133,7 @@ public class OllamaService {
                 dto.getChildren().add(childDTO);
             }
         }
+        System.out.println("Parsed RoadmapNodeDTO: " + dto);
         return dto;
     }
 

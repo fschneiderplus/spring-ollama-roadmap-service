@@ -14,7 +14,7 @@ public class RoadmapService {
     public RoadmapNodeDTO getRoadmapOnTheFly(String userPrompt) throws Exception {
         // 1. Call Ollama to get raw JSON as a string
         String jsonString = ollamaService.callOllamaForJSON(userPrompt);
-
+        System.out.println("Received JSON from Ollama: " + jsonString);
         // 2. Parse into RoadmapNodeDTO tree
         return ollamaService.parseRoadmapJSON(jsonString);
     }
