@@ -9,27 +9,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class SpringAILearningPathServiceImpl implements LearningPathService {
     private final RoadmapNodeRepository roadmapNodeRepository;
     private final ObjectMapper objectMapper;
-    private final ChatClient chatClient;
     private final OllamaService ollamaService;
 
     public SpringAILearningPathServiceImpl(
             RoadmapNodeRepository roadmapNodeRepository,
-            ObjectMapper objectMapper, 
-            ChatClient chatClient,
+            ObjectMapper objectMapper,
             OllamaService ollamaService) {
         this.roadmapNodeRepository = roadmapNodeRepository;
         this.objectMapper = objectMapper;
-        this.chatClient = chatClient;
         this.ollamaService = ollamaService;
     }
 
     @Override
     public Answer askQuestion(Question question) {
-        String answerText = chatClient.prompt()
-                .user(question.question())
-                .call()
-                .content();
-        return new Answer(answerText);
+        try {
+            String answerText = ollamaService.callOllamaForJSON(question.question());
+            return new Answer(answerText);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Answer("Sorry, I encountered an error while processing your question.");
+        }
     }
     @Override
     public RoadmapNode generateNodeFromLLM(String prompt) {
