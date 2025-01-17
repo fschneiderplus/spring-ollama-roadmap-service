@@ -3,11 +3,13 @@ package com.example.demo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+
 
 @Service
 public class OllamaService {
@@ -97,7 +99,7 @@ public class OllamaService {
      */
     private String createSystemPrompt() {
         return """
-        You are an AI that returns roadmap data in JSON format.
+        You are an AI that returns roadmap data in JSON format.In your responce there should be no additional text, only json, also the root title should be in the formal - "Roadmap for - input".
         Please ONLY return valid JSON. The JSON structure should look like:
         {
           "title": "string",
@@ -120,19 +122,8 @@ public class OllamaService {
      * Parse the returned JSON (the "response" field) into our RoadmapNodeDTO recursively.
      */
     public RoadmapNodeDTO parseRoadmapJSON(String json) throws Exception {
-        JsonNode root = objectMapper.readTree(json);
-
-        RoadmapNodeDTO dto = new RoadmapNodeDTO();
-        dto.setTitle(getText(root, "title"));
-        dto.setDescription(getText(root, "description"));
-        dto.setLink(getText(root, "link"));
-
-        if (root.has("children") && root.get("children").isArray()) {
-            for (JsonNode child : root.get("children")) {
-                RoadmapNodeDTO childDTO = parseRoadmapJSON(child.toString());
-                dto.getChildren().add(childDTO);
-            }
-        }
+        //simplified the previous code
+        RoadmapNodeDTO dto = objectMapper.readValue(json, RoadmapNodeDTO.class);
         System.out.println("Parsed RoadmapNodeDTO: " + dto);
         return dto;
     }
@@ -143,4 +134,5 @@ public class OllamaService {
         }
         return null;
     }
+
 }
