@@ -1,0 +1,4 @@
+2025-01-25 14:22:05.491559+01:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Синтаксическая ошибка в выражении SQL "SELECT * FROM NODE_EXPANDED NODE_EXPANDED [*]ROADMAP_NODE"
+Syntax error in SQL statement "SELECT * FROM NODE_EXPANDED NODE_EXPANDED [*]ROADMAP_NODE"; SQL statement:
+SELECT * FROM NODE_EXPANDED NODE_EXPANDED ROADMAP_NODE [42000-232]

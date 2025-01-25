@@ -24,11 +24,11 @@ public class OllamaService {
         this.objectMapper = objectMapper;
     }
 
-    public String callOllamaForJSON(String userPrompt) throws Exception {
+    public String callOllamaForJSON(String userPrompt, String requestPrompt) throws Exception {
         // 1. Construct the JSON body using ObjectMapper
         ObjectNode requestNode = objectMapper.createObjectNode()
                 .put("model", "llama3.2:latest")
-                .put("prompt", createSystemPrompt() + "\n" + userPrompt)
+                .put("prompt", requestPrompt + "\n" + userPrompt)
                 .put("stream", false);
 
         String requestBody = objectMapper.writeValueAsString(requestNode);
@@ -97,9 +97,10 @@ public class OllamaService {
     /**
      * This is our system-like prompt instructing Ollama how to format the output.
      */
-    private String createSystemPrompt() {
+    public String createSystemPrompt() {
         return """
-        You are an AI that returns roadmap data in JSON format.In your responce there should be no additional text, only json, also the root title should be in the formal - "Roadmap for - input".
+        You are an AI that returns roadmap data in JSON format. In your response there should be no additional text, only json, also the root title should be in the formal - "Roadmap for - input".
+        Field link for children should be in the format: "http://localhost:8080/api/node/{child_title}"
         Please ONLY return valid JSON. The JSON structure should look like:
         {
           "title": "string",
@@ -109,12 +110,32 @@ public class OllamaService {
             {
               "title": "string",
               "description": "string",
-              "link": "string or null",
+              "link": "string",
               "children": [...]
             },
             ...
           ]
         }
+        Roadmap title: 
+        """;
+    }
+
+    /**
+     * This is our system-like prompt instructing Ollama how to format the output.
+     */
+    public String createNodePrompt() {
+        return """
+        You are an AI that returns detailed information about topic in JSON format. In your response there should be no additional text, only json, also the title should be in the formal - "Explanation for - input".
+        The link field in JSON should be filled with source or additional info if it exists. Otherwise leave this field as null.
+        Please ONLY return valid JSON. The JSON structure should look like:
+        {
+          "title": "string",
+          "description": "string",
+          "examples": "string",
+          "howToLearn": "string",
+          "link": "string or null"
+        }
+        Topic title: 
         """;
     }
 
@@ -125,6 +146,16 @@ public class OllamaService {
         //simplified the previous code
         RoadmapNodeDTO dto = objectMapper.readValue(json, RoadmapNodeDTO.class);
         System.out.println("Parsed RoadmapNodeDTO: " + dto);
+        return dto;
+    }
+
+    /**
+     * Parse the returned JSON (the "response" field) into our NodeExpandedDTO.
+     */
+    public NodeExpandedDTO parseNodeJSON(String json) throws Exception {
+        //simplified the previous code
+        NodeExpandedDTO dto = objectMapper.readValue(json, NodeExpandedDTO.class);
+        System.out.println("Parsed NodeExpandedDTO: " + dto);
         return dto;
     }
 

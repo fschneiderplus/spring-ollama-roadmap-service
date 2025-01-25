@@ -21,6 +21,12 @@ public class RoadmapController {
 
     }
 
+    @GetMapping("/node/{title}")
+    public NodeExpandedDTO generateNodeInfo(@PathVariable String title) throws Exception {
+        // e.g. prompt = "Generate an expanded node info for learning advanced NLP."
+        return roadmapService.getNodeInfoOnTheFly(title);
+    }
+
     // Simple DTO for capturing the incoming prompt JSON
     public static class PromptDTO {
         private String prompt;
