@@ -5,5 +5,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RoadmapNodeRepository extends JpaRepository<RoadmapNode, Long> {
+
+    System.println.out("asd");
     
 }
