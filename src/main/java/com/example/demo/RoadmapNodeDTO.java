@@ -30,4 +30,15 @@ public class RoadmapNodeDTO {
         this.children = children;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("RoadmapNodeDTO{")
+          .append("title='").append(title).append('\'')
+          .append(", description='").append(description).append('\'')
+          .append(", link='").append(link).append('\'')
+          .append(", children=").append(children.size()).append(" items")
+          .append('}');
+        return sb.toString();
+    }
 }

@@ -3,58 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <title>Ollama Roadmap</title>
-    <script src="https://cdn.jsdelivr.net/npm/mind-elixir@2.0.0/dist/mind-elixir.js"></script>
+    <script type="module">
+        import MindElixir from 'https://cdn.jsdelivr.net/npm/mind-elixir@^4.0.0/dist/MindElixir.js';
+
+        window.generateRoadmap = function() {
+            const prompt = document.getElementById('prompt').value;
+            fetch('/api/roadmap', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prompt: prompt })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    // Handle the JSON data here
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        };
+
+        document.getElementById('generateButton').onclick = generateRoadmap;
+
+        window.loadRoadmaps = function() {
+            fetch('/api/roadmaps')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        renderRoadmap(data[0]); // Render the first roadmap
+                    }
+                })
+                .catch(err => console.error(err));
+        };
+
+        function renderRoadmap(data) {
+            const mindData = {
+                nodeData: convertDTOToMindElixir(data, "root"),
+                linkData: {}
+            };
+
+            const mind = new MindElixir({
+                el: '#map',
+                direction: MindElixir.LEFT,
+                data: mindData,
+                draggable: false
+            });
+            mind.init(mindData);
+        }
+
+        function convertDTOToMindElixir(nodeDTO, idPrefix) {
+            const node = {
+                id: idPrefix + Math.random().toString(36).substring(2, 6),
+                topic: nodeDTO.title + (nodeDTO.description ? `: ${nodeDTO.description}` : ""),
+                expanded: true,
+                children: []
+            };
+            if (nodeDTO.link) node.hyperlink = nodeDTO.link;
+            if (nodeDTO.children && nodeDTO.children.length) {
+                node.children = nodeDTO.children.map(c => convertDTOToMindElixir(c, idPrefix));
+            }
+            return node;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRoadmaps();
+        });
+    </script>
     <style>
         #map { width: 100%; height: 80vh; }
     </style>
 </head>
 <body>
 <h1>Generate Roadmap via Ollama</h1>
-<input type="text" id="promptInput" placeholder="Enter your prompt">
-<button onclick="generateRoadmap()">Generate</button>
+<label for="prompt">Prompt:</label>
+<input type="text" id="prompt" placeholder="Enter your prompt">
+<button id="generateButton">Generate</button>
+<button onclick="loadRoadmaps()">Load Roadmaps</button>
 <div id="map"></div>
-
-<script>
-    function generateRoadmap() {
-        const prompt = document.getElementById('promptInput').value;
-        fetch('/api/roadmap', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt })
-        })
-            .then(response => response.json())
-            .then(data => {
-                // Convert RoadmapNodeDTO to MindElixir format
-                const mindData = {
-                    nodeData: convertDTOToMindElixir(data, "root"),
-                    linkData: {}
-                };
-
-                // Render with MindElixir
-                const mind = new MindElixir({
-                    el: '#map',
-                    direction: MindElixir.LEFT,
-                    data: mindData,
-                    draggable: false
-                });
-                mind.init();
-            })
-            .catch(err => console.error(err));
-    }
-
-    function convertDTOToMindElixir(nodeDTO, idPrefix) {
-        const node = {
-            id: idPrefix + Math.random().toString(36).substring(2, 6),
-            topic: nodeDTO.title + (nodeDTO.description ? `: ${nodeDTO.description}` : ""),
-            expanded: true,
-            children: []
-        };
-        if (nodeDTO.link) node.hyperlink = nodeDTO.link;
-        if (nodeDTO.children && nodeDTO.children.length) {
-            node.children = nodeDTO.children.map(c => convertDTOToMindElixir(c, idPrefix));
-        }
-        return node;
-    }
-</script>
 </body>
 </html>
