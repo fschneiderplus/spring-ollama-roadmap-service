@@ -32,6 +32,9 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.length > 0) {
+                       // for (const roadmap of data) {
+                       //     renderRoadmap(roadmap);
+                       // }
                         renderRoadmap(data[0]); // Render the first roadmap
                     }
                 })
@@ -50,7 +53,11 @@
                 data: mindData,
                 draggable: false
             });
-            mind.init(mindData);
+            if (mindData.nodeData.id === "0"){
+                mind.init(mindData);
+            } else {
+                mind.add(mindData);
+            }
         }
 
         function convertDTOToMindElixir(nodeDTO, idPrefix) {
