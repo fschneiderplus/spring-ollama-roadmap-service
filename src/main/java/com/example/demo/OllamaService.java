@@ -99,10 +99,9 @@ public class OllamaService {
     public String createSystemPrompt() {
         return """
         You are an AI that returns roadmap data in JSON format.In your responce there should be no additional text, only json, also the root title should be in the formal - "Roadmap for - input".
-        ONLY return VALID JSON. Do not add backticks or other special chars at the beginning or end. The JSON structure should look like:
-        You are an AI that returns roadmap data in JSON format. In your response there should be no additional text, only json, also the root title should be in the formal - "Roadmap for - input".
+        ONLY return VALID JSON. Do not add backticks or other special chars at the beginning or end.
         Field link for children should be in the format: "http://localhost:8080/api/node/{child_title}"
-        Please ONLY return valid JSON. The JSON structure should look like:
+        ONLY return valid JSON. The JSON structure should look like:
         {
           "title": "string",
           "description": "string",

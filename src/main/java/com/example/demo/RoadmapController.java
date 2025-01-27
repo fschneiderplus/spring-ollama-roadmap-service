@@ -33,6 +33,11 @@ public class RoadmapController {
         return roadmapService.searchRoadmaps(query);
     }
 
+    @GetMapping("/roadmaps/search/most-children")
+    public RoadmapNodeDTO searchRoadmapWithMostChildren(@RequestParam String query) {
+        return roadmapService.searchRoadmapWithMostChildren(query);
+    }
+
     @GetMapping("/node/{title}")
     public NodeExpandedDTO generateNodeInfo(@PathVariable String title) throws Exception {
         // e.g. prompt = "Generate an expanded node info for learning advanced NLP."

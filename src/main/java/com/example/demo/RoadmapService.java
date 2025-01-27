@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,6 +62,14 @@ public class RoadmapService {
                 .collect(Collectors.toList());
     }
 
+    public RoadmapNodeDTO searchRoadmapWithMostChildren(String query) {
+        List<RoadmapNode> roadmaps = roadmapNodeRepository.findByTitleContainingIgnoreCase(query);
+        RoadmapNode roadmapWithMostChildren = roadmaps.stream()
+                .max(Comparator.comparingInt(roadmap -> roadmap.getChildren().size()))
+                .orElse(null);
+        return roadmapWithMostChildren != null ? convertToDTO(roadmapWithMostChildren) : null;
+    }
+
     public List<RoadmapNodeDTO> getAllRoadmaps(int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
         Page<RoadmapNode> roadmapsPage = roadmapNodeRepository.findAll(pageable);
@@ -104,7 +113,7 @@ public class RoadmapService {
             return convertEntityToNode(nodeInfo);
 
         // 1. Call Ollama to get raw JSON as a string
-        String jsonString = ollamaService.callOllamaForJSON(title, ollamaService.createNodePrompt());
+        String jsonString = ollamaService.callOllamaForJSON(title + ollamaService.createNodePrompt());
         System.out.println("Received JSON from Ollama: " + jsonString);
         // 2. Parse into RoadmapNodeDTO tree
         NodeExpandedDTO dto = ollamaService.parseNodeJSON(jsonString);

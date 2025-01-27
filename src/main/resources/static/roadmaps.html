@@ -53,6 +53,7 @@
     <div class="form-group">
         <input type="text" id="searchQuery" class="form-control" placeholder="Search roadmaps">
         <button onclick="searchRoadmaps()" class="btn btn-primary mt-2">Search</button>
+        <button onclick="searchRoadmapWithMostChildren()" class="btn btn-secondary mt-2">Search with Most Children</button>
     </div>
     <div id="maps"></div>
     <nav>
@@ -63,7 +64,6 @@
         </ul>
     </nav>
 </div>
-
 
 <script type="module">
     import MindElixir from 'https://cdn.jsdelivr.net/npm/mind-elixir@^4.0.0/dist/MindElixir.js';
@@ -92,6 +92,19 @@
                 document.getElementById('maps').innerHTML = '';
                 if (data.length > 0) {
                     renderRoadmap(data[0]); // Render only the first roadmap
+                }
+            })
+            .catch(err => console.error(err));
+    };
+
+    window.searchRoadmapWithMostChildren = function() {
+        const query = document.getElementById('searchQuery').value;
+        fetch(`/api/roadmaps/search/most-children?query=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('maps').innerHTML = '';
+                if (data) {
+                    renderRoadmap(data); // Render the roadmap with the most children
                 }
             })
             .catch(err => console.error(err));
