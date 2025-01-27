@@ -2,7 +2,10 @@ package com.example.demo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -48,16 +51,22 @@ public class RoadmapService {
         return dto;
     }
 
-
-
-    public List<RoadmapNodeDTO> getAllRoadmaps() {
-        List<RoadmapNode> roadmaps = roadmapNodeRepository.findAll();
-        printRoadmaps(roadmaps);
+    public List<RoadmapNodeDTO> searchRoadmaps(String query) {
+        List<RoadmapNode> roadmaps = roadmapNodeRepository.findByTitleContainingIgnoreCase(query);
         return roadmaps.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
+    public List<RoadmapNodeDTO> getAllRoadmaps(int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<RoadmapNode> roadmapsPage = roadmapNodeRepository.findAll(pageable);
+        List<RoadmapNode> roadmaps = roadmapsPage.getContent();
+        printRoadmaps(roadmaps);
+        return roadmaps.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 
     private void printRoadmaps(List<RoadmapNode> roadmaps) {
         for (RoadmapNode roadmap : roadmaps) {

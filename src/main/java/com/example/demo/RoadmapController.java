@@ -2,9 +2,9 @@ package com.example.demo;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -17,14 +17,20 @@ public class RoadmapController {
     }
 
     @GetMapping("/roadmaps")
-    public List<RoadmapNodeDTO> getAllRoadmaps() {
-        return roadmapService.getAllRoadmaps();
+    public List<RoadmapNodeDTO> getAllRoadmaps(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size) {
+        return roadmapService.getAllRoadmaps(page, size).stream()
+                .filter(roadmap -> roadmap.getChildren() != null && !roadmap.getChildren().isEmpty())
+                .collect(Collectors.toList());
     }
 
     @PostMapping("/roadmap")
-    public RedirectView generateRoadmap(@RequestBody PromptDTO prompt) throws Exception {
-        roadmapService.getRoadmapOnTheFly(prompt.getPrompt(), 0);
-        return new RedirectView("/roadmaps.html");
+    public RoadmapNodeDTO generateRoadmap(@RequestBody PromptDTO prompt) throws Exception {
+        return roadmapService.getRoadmapOnTheFly(prompt.getPrompt(), 0);
+    }
+
+    @GetMapping("/roadmaps/search")
+    public List<RoadmapNodeDTO> searchRoadmaps(@RequestParam String query) {
+        return roadmapService.searchRoadmaps(query);
     }
 
     // Simple DTO for capturing the incoming prompt JSON

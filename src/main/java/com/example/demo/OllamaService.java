@@ -28,6 +28,7 @@ public class OllamaService {
         // Construct the JSON body using ObjectMapper
         ObjectNode requestNode = objectMapper.createObjectNode()
                 .put("model", "llama3.2:latest")
+                .put("temperature", 0.5)
                 .put("prompt", createSystemPrompt() + "\n" + userPrompt)
                 .put("stream", false);
 
@@ -168,7 +169,7 @@ public class OllamaService {
     private String createSystemPrompt() {
         return """
         You are an AI that returns roadmap data in JSON format.In your responce there should be no additional text, only json, also the root title should be in the formal - "Roadmap for - input".
-        Please ONLY return valid JSON. Do not add backticks or other special chars at the beginning or end. The JSON structure should look like:
+        ONLY return VALID JSON. Do not add backticks or other special chars at the beginning or end. The JSON structure should look like:
         {
           "title": "string",
           "description": "string",
@@ -184,7 +185,9 @@ public class OllamaService {
             ...
           ]
         }
-        There should be children. The parent of the child CANNOT be null. If there are no children, the "children" field should be an empty array.
+        There should be at least four children. There should also be children who themself have children.
+        There must be a description.
+        The parent of the child CANNOT be null. If there are no children, the "children" field should be an empty array.
         """;
     }
 

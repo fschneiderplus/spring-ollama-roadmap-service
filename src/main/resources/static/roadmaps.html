@@ -3,39 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <title>Roadmaps</title>
-    <script type="module"> import MindElixir from 'https://cdn.jsdelivr.net/npm/mind-elixir@^4.0.0/dist/MindElixir.js'</script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <style>
-        #map { width: 100%; height: 80vh; }
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            margin-bottom: 20px;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .map-container {
+            width: 80%;
+            max-height: 60vh; /* Set a maximum height */
+            overflow: auto; /* Handle overflow content */
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background-color: #ffffff;
+        }
+        .pagination {
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
-<h1>Roadmaps</h1>
-<div id="map"></div>
+<div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Ollama</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">Generate Roadmap</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="roadmaps.html">View Roadmaps</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <h1 class="mt-5">Roadmaps</h1>
+    <div class="form-group">
+        <input type="text" id="searchQuery" class="form-control" placeholder="Search roadmaps">
+        <button onclick="searchRoadmaps()" class="btn btn-primary mt-2">Search</button>
+    </div>
+    <div id="maps"></div>
+    <nav>
+        <ul class="pagination">
+            <li class="page-item"><a class="page-link" href="#" onclick="loadRoadmaps(1)">1</a></li>
+            <li class="page-item"><a class="page-link" href="#" onclick="loadRoadmaps(2)">2</a></li>
+            <li class="page-item"><a class="page-link" href="#" onclick="loadRoadmaps(3)">3</a></li>
+        </ul>
+    </nav>
+</div>
 
-<script>
+
+<script type="module">
+    import MindElixir from 'https://cdn.jsdelivr.net/npm/mind-elixir@^4.0.0/dist/MindElixir.js';
+
     document.addEventListener('DOMContentLoaded', function() {
-        loadRoadmaps();
+        loadRoadmaps(1);
     });
 
-    function loadRoadmaps() {
-        fetch('/api/roadmaps')
+    window.loadRoadmaps = function(page) {
+        fetch(`/api/roadmaps?page=${page}`)
             .then(response => response.json())
             .then(data => {
+                document.getElementById('maps').innerHTML = '';
                 if (data.length > 0) {
-                    renderRoadmap(data[0]); // Render the first roadmap
+                    renderRoadmap(data[0]); // Render only the first roadmap
                 }
             })
             .catch(err => console.error(err));
-    }
+    };
+
+    window.searchRoadmaps = function() {
+        const query = document.getElementById('searchQuery').value;
+        fetch(`/api/roadmaps/search?query=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('maps').innerHTML = '';
+                if (data.length > 0) {
+                    renderRoadmap(data[0]); // Render only the first roadmap
+                }
+            })
+            .catch(err => console.error(err));
+    };
 
     function renderRoadmap(data) {
+        const mapContainer = document.createElement('div');
+        mapContainer.className = 'map-container';
+        document.getElementById('maps').appendChild(mapContainer);
+
         const mindData = {
             nodeData: convertDTOToMindElixir(data, "root"),
             linkData: {}
         };
 
         const mind = new MindElixir({
-            el: '#map',
+            el: mapContainer,
             direction: MindElixir.LEFT,
             data: mindData,
             draggable: false
@@ -43,12 +116,10 @@
         mind.init(mindData);
     }
 
-    <!-- Add that not only the first entry in the database is added, but all entries with at least 2 children, check via parent_id-->
-
     function convertDTOToMindElixir(nodeDTO, idPrefix) {
         const node = {
             id: idPrefix + Math.random().toString(36).substring(2, 6),
-            topic: nodeDTO.title + (nodeDTO.description ? `: ${nodeDTO.description}` : ""),
+            topic: `${nodeDTO.title}: ${nodeDTO.description}`,
             expanded: true,
             children: []
         };

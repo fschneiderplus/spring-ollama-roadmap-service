@@ -13,6 +13,7 @@ public class RoadmapNode {
     private Long id;
 
     private String title;
+    @Column(length = 1000)
     private String description;
     private String link;
 

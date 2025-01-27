@@ -1,0 +1,3 @@
+<changeSet id="1" author="fschneider">
+    <modifyDataType tableName="roadmap_node" columnName="description" newDataType="VARCHAR(1000)"/>
+</changeSet>
