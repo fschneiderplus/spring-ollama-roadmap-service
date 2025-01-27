@@ -1,0 +1,6 @@
+2025-01-27 12:37:01.838759+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLDataException: Value too long for column "DESCRIPTION CHARACTER VARYING(255)": "'This roadmap is designed to help you improve your skills and knowledge in Pytho... (342)"; SQL statement:
+insert into roadmap_node (description,link,parent_id,title,id) values (?,?,?,?,default) [22001-232]
+2025-01-27 12:44:33.733420+01:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLDataException: Value too long for column "DESCRIPTION CHARACTER VARYING(255)": "'This roadmap outlines the key milestones and objectives for a Python software e... (411)"; SQL statement:
+insert into roadmap_node (description,link,parent_id,title,id) values (?,?,?,?,default) [22001-232]
