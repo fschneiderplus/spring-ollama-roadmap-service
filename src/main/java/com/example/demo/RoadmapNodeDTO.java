@@ -9,6 +9,7 @@ public class RoadmapNodeDTO {
     private String link;
     private List<RoadmapNodeDTO> children = new ArrayList<>();
 
+
     public RoadmapNodeDTO() {}
 
     public RoadmapNodeDTO(String title, String description, String link) {
@@ -25,5 +26,19 @@ public class RoadmapNodeDTO {
     public String getLink() { return link; }
     public void setLink(String link) { this.link = link; }
     public List<RoadmapNodeDTO> getChildren() { return children; }
-    public void setChildren(List<RoadmapNodeDTO> children) { this.children = children; }
+    public void setChildren(List<RoadmapNodeDTO> children) {
+        this.children = children;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("RoadmapNodeDTO{")
+          .append("title='").append(title).append('\'')
+          .append(", description='").append(description).append('\'')
+          .append(", link='").append(link).append('\'')
+          .append(", children=").append(children.size()).append(" items")
+          .append('}');
+        return sb.toString();
+    }
 }

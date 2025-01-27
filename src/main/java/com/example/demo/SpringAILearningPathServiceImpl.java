@@ -23,7 +23,7 @@ public class SpringAILearningPathServiceImpl implements LearningPathService {
     @Override
     public Answer askQuestion(Question question) {
         try {
-            String answerText = ollamaService.callOllamaForJSON(question.question());
+            String answerText = ollamaService.callOllamaForJSON(question.question() + ollamaService.createSystemPrompt());
             return new Answer(answerText);
         } catch (Exception e) {
             e.printStackTrace();
@@ -34,7 +34,7 @@ public class SpringAILearningPathServiceImpl implements LearningPathService {
     public RoadmapNode generateNodeFromLLM(String prompt) {
         try {
             // 1. Call LLM service to get JSON describing the node
-            String nodeJson = ollamaService.callOllamaForJSON(prompt);
+            String nodeJson = ollamaService.callOllamaForJSON(prompt + ollamaService.createSystemPrompt());
 
             // 2. Parse JSON
             JsonNode jsonNode = objectMapper.readTree(nodeJson);

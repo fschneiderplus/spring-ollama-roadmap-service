@@ -13,23 +13,16 @@ public class RoadmapNode {
     private Long id;
 
     private String title;
+    @Column(length = 1000)
     private String description;
     private String link;
 
     @ManyToOne
+    @JoinColumn(name = "parent_id")
     private RoadmapNode parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RoadmapNode> children = new ArrayList<>();
-
-    public RoadmapNode() {
-    }
-
-    public RoadmapNode(String title, String description, String link) {
-        this.title = title;
-        this.description = description;
-        this.link = link;
-    }
 
     // Getters and setters
     public Long getId() { return id; }

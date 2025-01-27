@@ -3,11 +3,13 @@ package com.example.demo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+
 
 @Service
 public class OllamaService {
@@ -23,9 +25,10 @@ public class OllamaService {
     }
 
     public String callOllamaForJSON(String userPrompt) throws Exception {
-        // 1. Construct the JSON body using ObjectMapper
+        // Construct the JSON body using ObjectMapper
         ObjectNode requestNode = objectMapper.createObjectNode()
                 .put("model", "llama3.2:latest")
+                .put("temperature", 0.5)
                 .put("prompt", createSystemPrompt() + "\n" + userPrompt)
                 .put("stream", false);
 
@@ -33,9 +36,7 @@ public class OllamaService {
         System.out.println("Sending request to Ollama with body: " + requestBody);
 
         try {
-            // 2. Make the POST request to Ollama
-            System.out.println("Starting Ollama request...");
-            
+            // Make the POST request to Ollama
             return webClient.post()
                     .uri("/api/generate")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -95,10 +96,16 @@ public class OllamaService {
     /**
      * This is our system-like prompt instructing Ollama how to format the output.
      */
-    private String createSystemPrompt() {
+    public String createSystemPrompt() {
         return """
-        You are an AI that returns roadmap data in JSON format.
-        Please ONLY return valid JSON. The JSON structure should look like:
+        You are an AI that returns roadmap data in JSON format.In your responce there should be no additional text, only json, also the root title should be in the formal - "Roadmap for - input".
+        ONLY return VALID JSON. Do not add backticks or other special chars at the beginning or end.
+        Field link for children should be in the format: "http://localhost:8080/api/node/{child_title}"
+        There should be at least four children. There MUST also be children who themself have children.
+        There must be a description.
+        The parent of the child CANNOT be null. If there are no children, the "children" field should be an empty array.
+        Roadmap title: 
+        ONLY return valid JSON. The JSON structure should look like:
         {
           "title": "string",
           "description": "string",
@@ -108,6 +115,7 @@ public class OllamaService {
               "title": "string",
               "description": "string",
               "link": "string or null",
+              "parent": "string",
               "children": [...]
             },
             ...
@@ -117,23 +125,42 @@ public class OllamaService {
     }
 
     /**
+     * This is our system-like prompt instructing Ollama how to format the output.
+     */
+    public String createNodePrompt() {
+        return """
+        You are an AI that returns detailed information about topic in JSON format. In your response there should be no additional text, only json, also the title should be in the formal - "Explanation for - input".
+        The link field in JSON should be filled with source or additional info if it exists. Otherwise leave this field as null.
+        Please ONLY return valid JSON. The JSON structure should look like:
+        {
+          "title": "string",
+          "description": "string",
+          "examples": "string",
+          "howToLearn": "string",
+          "link": "string or null"
+        }
+        Topic title: 
+        """;
+    }
+
+    /**
      * Parse the returned JSON (the "response" field) into our RoadmapNodeDTO recursively.
      */
     public RoadmapNodeDTO parseRoadmapJSON(String json) throws Exception {
-        JsonNode root = objectMapper.readTree(json);
-
-        RoadmapNodeDTO dto = new RoadmapNodeDTO();
-        dto.setTitle(getText(root, "title"));
-        dto.setDescription(getText(root, "description"));
-        dto.setLink(getText(root, "link"));
-
-        if (root.has("children") && root.get("children").isArray()) {
-            for (JsonNode child : root.get("children")) {
-                RoadmapNodeDTO childDTO = parseRoadmapJSON(child.toString());
-                dto.getChildren().add(childDTO);
-            }
-        }
+        //simplified the previous code
+        System.out.println("Parsing JSON into RoadmapNodeDTO: " + json);
+        RoadmapNodeDTO dto = objectMapper.readValue(json, RoadmapNodeDTO.class);
         System.out.println("Parsed RoadmapNodeDTO: " + dto);
+        return dto;
+    }
+
+    /**
+     * Parse the returned JSON (the "response" field) into our NodeExpandedDTO.
+     */
+    public NodeExpandedDTO parseNodeJSON(String json) throws Exception {
+        //simplified the previous code
+        NodeExpandedDTO dto = objectMapper.readValue(json, NodeExpandedDTO.class);
+        System.out.println("Parsed NodeExpandedDTO: " + dto);
         return dto;
     }
 
@@ -143,4 +170,5 @@ public class OllamaService {
         }
         return null;
     }
+
 }

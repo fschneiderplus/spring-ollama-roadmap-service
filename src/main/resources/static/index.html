@@ -3,58 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <title>Ollama Roadmap</title>
-    <script src="https://cdn.jsdelivr.net/npm/mind-elixir@2.0.0/dist/mind-elixir.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <style>
-        #map { width: 100%; height: 80vh; }
+        body {
+            background-color: #f8f9fa;
+            height: 100vh; /* Ensure the body takes the full viewport height */
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar {
+            margin-bottom: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            flex: 1; /* Allow the container to grow and fill the remaining space */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Prevent overflow */
+        }
+        .map-container {
+            width: 100%;
+            height: 30vh; /* Set a fixed height */
+            margin-top: 20px;
+            overflow: auto; /* Handle overflow content */
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background-color: #ffffff;
+        }
     </style>
+
+    <script type="module">
+        import MindElixir from 'https://cdn.jsdelivr.net/npm/mind-elixir@^4.0.0/dist/MindElixir.js';
+
+        let mind;
+
+        window.generateRoadmap = function() {
+            const prompt = document.getElementById('prompt').value;
+            fetch('/api/roadmap', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prompt: prompt })
+            })
+                .then(response => response.text())
+                .then(text => {
+                    console.log('Response text:', text);
+                    return JSON.parse(text);
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                    renderRoadmap(data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        };
+
+        document.getElementById('generateButton').onclick = generateRoadmap;
+
+        window.loadRoadmaps = function() {
+            window.location.href = '/roadmaps.html';
+        };
+
+        function renderRoadmap(data) {
+            const mindData = {
+                nodeData: convertDTOToMindElixir(data, "root"),
+                linkData: {}
+            };
+
+            mind = new MindElixir({
+                el: '#map',
+                direction: MindElixir.LEFT,
+                data: mindData,
+                draggable: true
+            });
+
+            mind.init(mindData);
+
+            mind.bus.addListener('selectNode', (node) => {
+                const title = node.topic.split(': ')[0];
+                fetch(`/api/node/${title}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        renderRoadmap(data);
+                    })
+                    .catch(err => console.error(err));
+            });
+
+        }
+
+        function convertDTOToMindElixir(nodeDTO, idPrefix) {
+            const node = {
+                id: idPrefix + Math.random().toString(36).substring(2, 6),
+                topic: `${nodeDTO.title}: ${nodeDTO.description}`,
+                expanded: true,
+                children: []
+            };
+            if (nodeDTO.link) node.hyperlink = nodeDTO.link;
+            if (nodeDTO.children && nodeDTO.children.length) {
+                node.children = nodeDTO.children.map(c => convertDTOToMindElixir(c, idPrefix));
+            }
+            return node;
+        }
+    </script>
 </head>
 <body>
-<h1>Generate Roadmap via Ollama</h1>
-<input type="text" id="promptInput" placeholder="Enter your prompt">
-<button onclick="generateRoadmap()">Generate</button>
-<div id="map"></div>
-
-<script>
-    function generateRoadmap() {
-        const prompt = document.getElementById('promptInput').value;
-        fetch('/api/roadmap', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt })
-        })
-            .then(response => response.json())
-            .then(data => {
-                // Convert RoadmapNodeDTO to MindElixir format
-                const mindData = {
-                    nodeData: convertDTOToMindElixir(data, "root"),
-                    linkData: {}
-                };
-
-                // Render with MindElixir
-                const mind = new MindElixir({
-                    el: '#map',
-                    direction: MindElixir.LEFT,
-                    data: mindData,
-                    draggable: false
-                });
-                mind.init();
-            })
-            .catch(err => console.error(err));
-    }
-
-    function convertDTOToMindElixir(nodeDTO, idPrefix) {
-        const node = {
-            id: idPrefix + Math.random().toString(36).substring(2, 6),
-            topic: nodeDTO.title + (nodeDTO.description ? `: ${nodeDTO.description}` : ""),
-            expanded: true,
-            children: []
-        };
-        if (nodeDTO.link) node.hyperlink = nodeDTO.link;
-        if (nodeDTO.children && nodeDTO.children.length) {
-            node.children = nodeDTO.children.map(c => convertDTOToMindElixir(c, idPrefix));
-        }
-        return node;
-    }
-</script>
+<div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Ollama</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">Generate Roadmap</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="roadmaps.html">View Roadmaps</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <h1 class="mt-5">Generate Roadmap via Ollama</h1>
+    <div class="form-group">
+        <label for="prompt">Prompt:</label>
+        <input type="text" id="prompt" class="form-control" placeholder="Enter your prompt">
+    </div>
+    <div class="d-flex">
+        <button id="generateButton" class="btn btn-primary mr-2">Generate</button>
+        <button onclick="loadRoadmaps()" class="btn btn-secondary">Load Roadmaps</button>
+    </div>
+    <div id="map" class="map-container"></div>
+</div>
 </body>
 </html>
