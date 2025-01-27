@@ -18,6 +18,9 @@ public class RoadmapService {
     @Autowired
     private RoadmapNodeRepository roadmapNodeRepository;
 
+    @Autowired
+    private NodeExpandedRepository nodeExpandedRepository;
+
     public RoadmapService(OllamaService ollamaService) {
         this.ollamaService = ollamaService;
     }
@@ -95,6 +98,26 @@ public class RoadmapService {
         return dto;
     }
 
+    public NodeExpandedDTO getNodeInfoOnTheFly(String title) throws Exception {
+        NodeExpanded nodeInfo = nodeExpandedRepository.findByTitle(title);
+        if (nodeInfo != null)
+            return convertEntityToNode(nodeInfo);
+
+        // 1. Call Ollama to get raw JSON as a string
+        String jsonString = ollamaService.callOllamaForJSON(title, ollamaService.createNodePrompt());
+        System.out.println("Received JSON from Ollama: " + jsonString);
+        // 2. Parse into RoadmapNodeDTO tree
+        NodeExpandedDTO dto = ollamaService.parseNodeJSON(jsonString);
+        // Convert DTO to Entity recursively
+        NodeExpanded rootEntity = convertNodeToEntity(dto);
+        // Save the entire hierarchy (only root needs to be saved)
+        // now its possible to traverse the roadmaprepo (with proper initialization) and retreive all of the nodes stored
+        // this should also make it easier for UI
+        nodeExpandedRepository.save(rootEntity);
+        return dto;
+        //return ollamaService.parseRoadmapJSON(jsonString);
+    }
+
     private RoadmapNode convertToEntity(RoadmapNodeDTO dto, RoadmapNode parent) {
         RoadmapNode node = new RoadmapNode();
         node.setTitle(dto.getTitle());
@@ -115,5 +138,25 @@ public class RoadmapService {
         return node;
     }
 
+    private NodeExpanded convertNodeToEntity(NodeExpandedDTO dto) {
+        NodeExpanded node = new NodeExpanded();
+        node.setTitle(dto.getTitle());
+        node.setDescription(dto.getDescription());
+        node.setExamples(dto.getExamples());
+        node.setHowToLearn(dto.getHowToLearn());
+        node.setLink(dto.getLink());
 
+        return node;
+    }
+
+    private NodeExpandedDTO convertEntityToNode(NodeExpanded node) {
+        NodeExpandedDTO dto = new NodeExpandedDTO();
+        dto.setTitle(node.getTitle());
+        dto.setDescription(node.getDescription());
+        dto.setExamples(node.getExamples());
+        dto.setHowToLearn(node.getHowToLearn());
+        dto.setLink(node.getLink());
+
+        return dto;
+    }
 }
