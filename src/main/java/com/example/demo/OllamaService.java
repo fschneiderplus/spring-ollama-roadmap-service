@@ -24,12 +24,12 @@ public class OllamaService {
         this.objectMapper = objectMapper;
     }
 
-    public String callOllamaForJSON(String userPrompt) throws Exception {
+    public String callOllamaForJSON(String userPrompt, String promptTemplate) throws Exception {
         // Construct the JSON body using ObjectMapper
         ObjectNode requestNode = objectMapper.createObjectNode()
                 .put("model", "llama3.2:latest")
                 .put("temperature", 0.5)
-                .put("prompt", createSystemPrompt() + "\n" + userPrompt)
+                .put("prompt", promptTemplate + "\n" + userPrompt)
                 .put("stream", false);
 
         String requestBody = objectMapper.writeValueAsString(requestNode);

@@ -71,6 +71,7 @@
         };
 
         function renderRoadmap(data) {
+            let isRoadmap = true;
             const mindData = {
                 nodeData: convertDTOToMindElixir(data, "root"),
                 linkData: {}
@@ -86,15 +87,28 @@
             mind.init(mindData);
 
             mind.bus.addListener('selectNode', (node) => {
+                if (!isRoadmap)
+                    return;
                 const title = node.topic.split(': ')[0];
                 fetch(`/api/node/${title}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        renderRoadmap(data);
+                    .then(response => response.text())
+                    .then(text => {
+                        console.log('Response text:', text);
+                        return JSON.parse(text);
                     })
-                    .catch(err => console.error(err));
+                    .then(data => {
+                        console.log('Success:', data);
+                        const newMindData = {
+                            nodeData: convertNodeExpandedDTOToMindElixir(data, "root"),
+                            linkData: {}
+                        };
+                        mind.init(newMindData);
+                        isRoadmap = false;
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
             });
-
         }
 
         function convertDTOToMindElixir(nodeDTO, idPrefix) {
@@ -109,6 +123,27 @@
                 node.children = nodeDTO.children.map(c => convertDTOToMindElixir(c, idPrefix));
             }
             return node;
+        }
+
+        function convertNodeExpandedDTOToMindElixir(nodeDTO, idPrefix) {
+            return {
+                id: idPrefix + Math.random().toString(36).substring(2, 6),
+                topic: nodeDTO.title,
+                expanded: true,
+                children: [{
+                    id: idPrefix + Math.random().toString(36).substring(2, 6),
+                    topic: nodeDTO.description,
+                }, {
+                    id: idPrefix + Math.random().toString(36).substring(2, 6),
+                    topic: nodeDTO.examples,
+                }, {
+                    id: idPrefix + Math.random().toString(36).substring(2, 6),
+                    topic: nodeDTO.howToLearn,
+                }, {
+                    id: idPrefix + Math.random().toString(36).substring(2, 6),
+                    topic: nodeDTO.link,
+                }]
+            };
         }
     </script>
 </head>
@@ -137,7 +172,7 @@
     </div>
     <div class="d-flex">
         <button id="generateButton" class="btn btn-primary mr-2">Generate</button>
-        <button onclick="loadRoadmaps()" class="btn btn-secondary">Load Roadmaps</button>
+        <button onclick="loadRoadmaps()" class="btn btn-secondary mr-2">Load Roadmaps</button>
     </div>
     <div id="map" class="map-container"></div>
 </div>
