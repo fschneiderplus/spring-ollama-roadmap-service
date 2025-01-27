@@ -101,6 +101,10 @@ public class OllamaService {
         You are an AI that returns roadmap data in JSON format.In your responce there should be no additional text, only json, also the root title should be in the formal - "Roadmap for - input".
         ONLY return VALID JSON. Do not add backticks or other special chars at the beginning or end.
         Field link for children should be in the format: "http://localhost:8080/api/node/{child_title}"
+        There should be at least four children. There MUST also be children who themself have children.
+        There must be a description.
+        The parent of the child CANNOT be null. If there are no children, the "children" field should be an empty array.
+        Roadmap title: 
         ONLY return valid JSON. The JSON structure should look like:
         {
           "title": "string",
@@ -117,10 +121,6 @@ public class OllamaService {
             ...
           ]
         }
-        There should be at least four children. There should also be children who themself have children.
-        There must be a description.
-        The parent of the child CANNOT be null. If there are no children, the "children" field should be an empty array.
-        Roadmap title: 
         """;
     }
 

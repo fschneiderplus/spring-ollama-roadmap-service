@@ -133,6 +133,16 @@
             draggable: false
         });
         mind.init(mindData);
+
+        mind.bus.addListener('selectNode', (node) => {
+            const title = node.topic.split(': ')[0];
+            fetch(`/api/node/${title}`)
+                .then(response => response.json())
+                .then(data => {
+                    renderRoadmap(data);
+                })
+                .catch(err => console.error(err));
+        });
     }
 
     function convertDTOToMindElixir(nodeDTO, idPrefix) {
