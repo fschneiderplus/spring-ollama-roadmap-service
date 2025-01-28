@@ -10,8 +10,11 @@ public class NodeExpanded {
     private Long id;
 
     private String title;
+    @Column(length = 1000)
     private String description;
+    @Column(length = 1000)
     private String examples;
+    @Column(length = 1000)
     private String howToLearn;
     private String link;
 
