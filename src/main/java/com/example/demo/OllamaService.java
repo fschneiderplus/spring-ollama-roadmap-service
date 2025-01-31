@@ -24,12 +24,12 @@ public class OllamaService {
         this.objectMapper = objectMapper;
     }
 
-    public String callOllamaForJSON(String userPrompt) throws Exception {
+    public String callOllamaForJSON(String userPrompt, String promptTemplate) throws Exception {
         // Construct the JSON body using ObjectMapper
         ObjectNode requestNode = objectMapper.createObjectNode()
                 .put("model", "llama3.2:latest")
                 .put("temperature", 0.5)
-                .put("prompt", createSystemPrompt() + "\n" + userPrompt)
+                .put("prompt", promptTemplate + "\n" + userPrompt)
                 .put("stream", false);
 
         String requestBody = objectMapper.writeValueAsString(requestNode);
@@ -131,7 +131,7 @@ public class OllamaService {
         return """
         You are an AI that returns detailed information about topic in JSON format. In your response there should be no additional text, only json, also the title should be in the formal - "Explanation for - input".
         The link field in JSON should be filled with source or additional info if it exists. Otherwise leave this field as null.
-        Please ONLY return valid JSON. The JSON structure should look like:
+        DO NOT put arrays into the json. Please ONLY return valid JSON. The JSON structure should look like:
         {
           "title": "string",
           "description": "string",

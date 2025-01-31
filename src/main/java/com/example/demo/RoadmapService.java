@@ -30,7 +30,7 @@ public class RoadmapService {
         int retry_num = retry_count;
         int max_retries = 10;
         // 1. Call Ollama to get raw JSON as a string
-        String jsonString = ollamaService.callOllamaForJSON(userPrompt);
+        String jsonString = ollamaService.callOllamaForJSON(userPrompt, ollamaService.createSystemPrompt());
         System.out.println("Received JSON from Ollama: " + jsonString);
         // Validate JSON
         try {
@@ -113,7 +113,7 @@ public class RoadmapService {
             return convertEntityToNode(nodeInfo);
 
         // 1. Call Ollama to get raw JSON as a string
-        String jsonString = ollamaService.callOllamaForJSON(title + ollamaService.createNodePrompt());
+        String jsonString = ollamaService.callOllamaForJSON(title, ollamaService.createNodePrompt());
         System.out.println("Received JSON from Ollama: " + jsonString);
         // 2. Parse into RoadmapNodeDTO tree
         NodeExpandedDTO dto = ollamaService.parseNodeJSON(jsonString);
