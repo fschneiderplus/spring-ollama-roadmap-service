@@ -1,5 +1,5 @@
 
-# Project: SpringBoot roadmap.sh version using LLMs
+# Project: Spring Boot application inspired by roadmap.sh with the use of LLMs
 
 ## Contributors : Frank Schneider , Ivan Ivchenko , Andrey Alakhov , Peter Pajic
 
